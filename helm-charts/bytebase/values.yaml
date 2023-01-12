@@ -2,12 +2,63 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-bytebase:
-  option:
-    port: 8080
+replicaCount: 1
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+
+image:
+  repository: bytebase/bytebase
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "4.2.0"
+
+service:
+  type: LoadBalancer
+  port: 8080
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+# runAsUser: 1000
+
+volume:
+  data: /var/opt/bytebase
+
+database:
+  #Existing Secret Name
+  existingSecret:
+  type: postgresql
+  user:
+  host:
+  port:
+  name:
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+#   memory: 128Mi
+
+
     # You should set this to the URL where users visits Bytebase.
-    external-url: https://www.bytebase.com/docs/get-started/install/external-url
-    pg: postgresql://user:secret@host:port/dbname
-    data: /var/opt/bytebase
-  version: 1.7.0
-  storage: 2Gi
+external-url: https://www.bytebase.com/docs/get-started/install/external-url
+pg: postgresql://user:secret@host:port/dbname
+data: /var/opt/bytebase
+
+storage:
+  size: 2Gi
