@@ -1,10 +1,7 @@
-{{- $external_url := .Values.external-url -}}
-{{- if .Values.database.existingSecret -}}
-{{- $pg := include "pg.env" . | indent 18  -}}
-{{- else -}}
+{{- $external_url := index .Values "external-url" -}}
 {{- $pg := .Values.pg -}}
-{{- end -}}
-{{- $data := .Values.data -}}
+{{- $port := .Values.service.port -}}
+{{- $data := .Values.volume.data -}}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -13,12 +10,11 @@ metadata:
   labels:
     {{- include "bytebase.labels" . | nindent 4 }}
 spec:
-  {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
-  {{- end }}
   selector:
     matchLabels:
       {{- include "bytebase.selectorLabels" . | nindent 6 }}
+  serviceName: "bytebase"
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -53,6 +49,7 @@ spec:
               "--pg",
               {{ $pg | quote }},
             ]
+          env: {{ include "pg.env" . | indent 18 }}
           volumeMounts:
             - mountPath: {{ .Values.volume.data  }}
               name: bytebase
@@ -60,12 +57,12 @@ spec:
             - containerPort: {{ .Values.service.port }}
               name: web
               protocol: TCP
-          env:
-            - name: DATABASE_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.database.secret }}
-                  key: password
+          #env:
+          #  - name: DATABASE_PASSWORD
+          #    valueFrom:
+          #      secretKeyRef:
+          #        name: {{ .Values.database.existingSecret }}
+          #        key: password
           readinessProbe:
             httpGet:
               path: /api/actuator/info

@@ -16,7 +16,7 @@ image:
   repository: bytebase/bytebase
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "4.2.0"
+  tag: "1.7.0"
 
 service:
   type: LoadBalancer
@@ -35,12 +35,12 @@ volume:
 
 database:
   #Existing Secret Name
-  existingSecret:
+  existingSecret: airbyte.plural-airbyte.credentials.postgresql.acid.zalan.do
   type: postgresql
-  user:
-  host:
-  port:
-  name:
+  user: bytebase
+  host: bytebase-host
+  port: "5432"
+  name: bytebase
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
@@ -55,7 +55,12 @@ resources: {}
 #   memory: 128Mi
 
 
+
     # You should set this to the URL where users visits Bytebase.
+serviceAccount:
+  create: true
+  name: bytebase
+
 external-url: https://www.bytebase.com/docs/get-started/install/external-url
 pg: postgresql://user:secret@host:port/dbname
 data: /var/opt/bytebase
