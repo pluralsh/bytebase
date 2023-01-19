@@ -47,9 +47,10 @@ spec:
               # helm parser cannot handle the dash in the value, so we need to quote it, so we use $external_url instead of $external-url.
               {{ $external_url | quote }},
               "--pg",
-              {{ $pg | quote }},
+              "$DB_URL",
             ]
-          env: {{ include "pg.env" . | indent 18 }}
+          env:
+            {{- include "pg.env" . | indent 12 }}
           volumeMounts:
             - mountPath: {{ .Values.volume.data  }}
               name: bytebase

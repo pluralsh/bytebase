@@ -73,10 +73,15 @@ Create the name of the service account to use
 {{- end }}
 
 {{- define "pg.env" }}
+{{- if .Values.database.existingSecret }}
 - name: DATABASE_PASSWORD
   valueFrom:
     secretKeyRef:
       name: {{ .Values.database.existingSecret }}
       key: password
--  { name: DB_URL, value: "{{ printf "%s://%s:$(DATABASE_PASSWORD)@%s:%s/%s" .Values.database.type .Values.database.user  .Values.database.host .Values.database.port .Values.database.name }}"}
-{{- end -}}
+- name: DB_URL
+  value: "{{ printf "%s://%s:$(DATABASE_PASSWORD)@%s:%s/%s" .Values.database.type .Values.database.user  .Values.database.host .Values.database.port .Values.database.name }}"
+{{- else }}
+{{- $DB_URL := .Values.pg }}
+{{- end }}
+{{- end }}

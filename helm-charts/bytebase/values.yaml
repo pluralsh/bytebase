@@ -35,7 +35,7 @@ volume:
 
 database:
   #Existing Secret Name
-  existingSecret: airbyte.plural-airbyte.credentials.postgresql.acid.zalan.do
+  existingSecret: 
   type: postgresql
   user: bytebase
   host: bytebase-host
@@ -63,6 +63,7 @@ serviceAccount:
 
 external-url: https://www.bytebase.com/docs/get-started/install/external-url
 pg: postgresql://user:secret@host:port/dbname
+pass: secret
 data: /var/opt/bytebase
 
 storage:
