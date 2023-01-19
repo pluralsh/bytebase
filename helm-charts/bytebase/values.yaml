@@ -35,7 +35,7 @@ volume:
 
 database:
   #Existing Secret Name
-  existingSecret: 
+  existingSecret:
   type: postgresql
   user: bytebase
   host: bytebase-host
