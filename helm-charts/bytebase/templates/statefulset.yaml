@@ -1,31 +1,42 @@
-{{- $external_url := index .Values.bytebase.option "external-url" -}}
-{{- $port := .Values.bytebase.option.port -}}
-{{- $pg := .Values.bytebase.option.pg -}}
-{{- $data := .Values.bytebase.option.data -}}
-{{- $version := .Values.bytebase.version -}}
+{{- $external_url := index .Values "external-url" -}}
+{{- $pg := .Values.pg -}}
+{{- $port := .Values.service.port -}}
+{{- $data := .Values.volume.data -}}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: bytebase
+  name: {{ include "bytebase.fullname" . }}
   namespace: {{ template "bytebase.namespace" . }}
   labels:
-    app.kubernetes.io/managed-by: helm
-    app: bytebase
+    {{- include "bytebase.labels" . | nindent 4 }}
 spec:
+  replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: bytebase
+      {{- include "bytebase.selectorLabels" . | nindent 6 }}
   serviceName: "bytebase"
-  replicas: 1
   template:
     metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       labels:
-        app: bytebase
+        {{- include "bytebase.selectorLabels" . | nindent 8 }}
     spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "bytebase.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
-        - name: bytebase
-          image: "bytebase/bytebase:{{ $version }}"
-          imagePullPolicy: Always
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:
             [
               "--data",
@@ -36,14 +47,23 @@ spec:
               # helm parser cannot handle the dash in the value, so we need to quote it, so we use $external_url instead of $external-url.
               {{ $external_url | quote }},
               "--pg",
-              {{ $pg | quote}},
+              "$DB_URL",
             ]
-          ports:
-            - containerPort: {{ $port }}
-              name: web
+          env:
+            {{- include "pg.env" . | indent 12 }}
           volumeMounts:
-            - mountPath: {{ $data }}
+            - mountPath: {{ .Values.volume.data  }}
               name: bytebase
+          ports:
+            - containerPort: {{ .Values.service.port }}
+              name: web
+              protocol: TCP
+          #env:
+          #  - name: DATABASE_PASSWORD
+          #    valueFrom:
+          #      secretKeyRef:
+          #        name: {{ .Values.database.existingSecret }}
+          #        key: password
           readinessProbe:
             httpGet:
               path: /api/actuator/info
@@ -53,19 +73,21 @@ spec:
           livenessProbe:
             httpGet:
               path: /healthz
-              port: {{ $port }}
+              port: {{ .Values.service.port }}
             initialDelaySeconds: 300
             periodSeconds: 300
             timeoutSeconds: 60
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
       volumes:
-        - name: data
-          emptyDir: {}
+      - name: bytebase
+        emptyDir: {}
   volumeClaimTemplates:
     - metadata:
-        name: bytebase
+        name: {{ include "bytebase.fullname" . }}
       spec:
         accessModes:
           - ReadWriteOnce
         resources:
           requests:
-            storage: "{{ .Values.bytebase.storage }}"
+            storage: "{{ .Values.storage.size }}"

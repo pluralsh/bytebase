@@ -1,16 +1,16 @@
-{{- $port := .Values.bytebase.option.port -}}
 apiVersion: v1
 kind: Service
 metadata:
-  name: bytebase-entrypoint
+  name: {{ include "bytebase.fullname" . }}
   namespace: {{ template "bytebase.namespace" . }}
   labels:
-    app.kubernetes.io/managed-by: helm
+    {{- include "bytebase.labels" . | nindent 4 }}
 spec:
-  type: LoadBalancer
-  selector:
-    app: bytebase
+  type: {{ .Values.service.type }}
   ports:
-  - protocol: TCP
-    port: {{ $port }}
-    targetPort: {{ $port }}
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "bytebase.selectorLabels" . | nindent 4 }}
